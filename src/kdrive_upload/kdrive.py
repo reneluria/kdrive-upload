@@ -17,9 +17,9 @@ class KDrive:
                 config_username = config.get('credentials', 'username')
                 config_password = config.get('credentials', 'password')
             except configparser.NoOptionError:
-                raise ValueError(f"Wrong options in {files}")
+                raise ValueError("Wrong options in {}".format(files))
             except configparser.NoSectionError:
-                raise ValueError(f"No section credentials in {files}")
+                raise ValueError("No section credentials in {}".format(files))
         # override with env vars
         self._username = os.getenv("DRIVE_USERNAME", config_username)
         self._password = os.getenv("DRIVE_PASSWORD", config_password)
@@ -36,19 +36,19 @@ class KDrive:
         self._basepath = drive
 
     def mkdir_p(self, path):
-        directory = f"{self._basepath}/{path}"
+        directory = "{}/{}".format(self._basepath, path)
         try:
             self._client.info(directory)
         except webdav3.exceptions.RemoteResourceNotFound:
-            print(f"Creating directory {directory}")
+            print("Creating directory {}".format(directory))
             self._client.mkdir(directory)
         return directory
 
     def upload(self, dest, file, keep=False):
         dest_filename = os.path.basename(file.name)
         directory = self.mkdir_p(dest)
-        self._client.upload_sync(f"{directory}/{dest_filename}", file.name)
-        print(f"{file.name} uploaded to {directory}/{dest_filename}")
+        self._client.upload_sync("{}/{}".format(directory, dest_filename), file.name)
+        print("{} uploaded to {}/{}".format(file.name, directory, dest_filename))
         if not keep:
             os.unlink(file.name)
-            print(f"{file.name} removed")
+            print("{} removed".format(file.name))
