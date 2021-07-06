@@ -44,6 +44,6 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: ${{ github.ref }}
         body: |
-          Release created, package download: https://pypi.org/project/certbot-dns-infomaniak/${{ steps.get_version.outputs.VERSION }}/
+          Release created, package download: https://pypi.org/project/kdrive-upload/${{ steps.get_version.outputs.VERSION }}/
         draft: false
         prerelease: false
