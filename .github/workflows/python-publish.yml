@@ -31,7 +31,7 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TWINE_TOKEN }}
       run: |
-        sed -i.bak 's/^version =.*/version = "${{ steps.get_version.outputs.VERSION }}"/' setup.cfg
+        sed -i.bak 's/^version =.*/version = ${{ steps.get_version.outputs.VERSION }}/' setup.cfg
         python setup.py sdist bdist_wheel
         twine upload dist/*
 
