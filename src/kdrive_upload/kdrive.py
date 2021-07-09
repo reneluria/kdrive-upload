@@ -29,26 +29,38 @@ class KDrive:
             'webdav_hostname': self._url,
             'webdav_login': self._username,
             'webdav_password': self._password,
-            'verbose': True
+            'webdav_disable_check': True,
         }
         client = Client(options)
         self._client = client
         self._basepath = drive
 
     def mkdir_p(self, path):
-        directory = "{}/{}".format(self._basepath, path)
+        parent = os.path.dirname(path)
+        if parent == self._basepath:
+            raise ValueError("Would not create the drive itself")
         try:
-            self._client.info(directory)
-        except webdav3.exceptions.RemoteResourceNotFound:
-            print("Creating directory {}".format(directory))
-            self._client.mkdir(directory)
-        return directory
+            self._client.mkdir(parent)
+        except webdav3.exceptions.ResponseErrorCode as err:
+            if err.code == 409:
+                self.mkdir_p(parent)
+                print("mkdir {}".format(parent))
+                self._client.mkdir(parent)
+            else:
+                raise
 
     def upload(self, dest, file, keep=False):
-        dest_filename = os.path.basename(file.name)
-        directory = self.mkdir_p(dest)
-        self._client.upload_sync("{}/{}".format(directory, dest_filename), file.name)
-        print("{} uploaded to {}/{}".format(file.name, directory, dest_filename))
+        dest_filename = "{}/{}/{}".format(self._basepath, dest, os.path.basename(file.name))
+        try:
+            self._client.upload_sync(dest_filename, file.name)
+        except webdav3.exceptions.ResponseErrorCode as err:
+            if err.code == 409:
+                # Files cannot be created in non-existent collections
+                self.mkdir_p(dest_filename)
+                self._client.upload_sync(dest_filename, file.name)
+            else:
+                raise
+        print("{} uploaded to {}".format(file.name, dest_filename))
         if not keep:
             os.unlink(file.name)
             print("{} removed".format(file.name))
